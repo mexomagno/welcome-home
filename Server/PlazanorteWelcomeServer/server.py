@@ -12,6 +12,7 @@ BUFFER_SIZE = 1024
 # Service broadcast settings
 #servicebroadcast_thread;
 BROADCAST_PORT = 50000
+BROADCAST_IP = "192.168.0.255"
 SECRET = "laminatenicida"
 SLEEP_PERIOD = 5
 
@@ -35,8 +36,8 @@ def serviceInfoBroadcast():
 
     # Broadcast our info, waiting for a client
     while RUN:
-        data = SECRET + MY_IP
-        s.sendto(data, ("<broadcast>", BROADCAST_PORT))
+        data = SECRET + ":" + SERVER_PORT
+        s.sendto(data, ("192.168.0.255", BROADCAST_PORT))
         print "Sent broadcast with our service info"
         sleep(SLEEP_PERIOD)
 

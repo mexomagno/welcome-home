@@ -1,3 +1,6 @@
 <resources>
-    <string name="app_name">MPD Welcome</string>
+    <string name="app_name">PlazanorteWelcome Client</string>
+    <string name="server_port">Server port:</string>
+    <string name="server_ip">Server IP:</string>
+    <string name="serverdiscover_label">ServerDiscover</string>
 </resources>

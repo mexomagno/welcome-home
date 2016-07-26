@@ -9,8 +9,88 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context="org.duckdns.mexomagno.mpdwelcome.MainScreen">
 
-    <TextView
+    <ImageButton
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:id="@+id/imageButton"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:src="@android:drawable/presence_online"
+        android:scaleType="fitCenter"
+        android:layout_margin="80dp" />
+
+    <TableLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Hello World!" />
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/imageButton">
+
+        <TableRow
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/server_ip"
+                android:id="@+id/label_server_ip"
+                android:layout_below="@+id/text_server_port"
+                android:layout_toRightOf="@+id/label_server_port"
+                android:layout_toEndOf="@+id/label_server_port"
+                android:layout_column="1"
+                android:layout_gravity="right"
+                android:layout_marginRight="10dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="none"
+                android:id="@+id/text_server_ip"
+                android:layout_above="@+id/label_server_port"
+                android:layout_alignLeft="@+id/imageButton"
+                android:layout_alignStart="@+id/imageButton"
+                android:layout_column="3"
+                android:layout_gravity="left" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_margin="10dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="@string/server_port"
+                android:id="@+id/label_server_port"
+                android:layout_alignParentBottom="false"
+                android:layout_alignRight="@+id/imageButton"
+                android:layout_alignEnd="@+id/imageButton"
+                android:layout_alignParentTop="false"
+                android:layout_alignParentLeft="false"
+                android:layout_alignParentRight="false"
+                android:layout_alignWithParentIfMissing="false"
+                android:layout_column="1"
+                android:layout_gravity="right"
+                android:layout_marginRight="10dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="none"
+                android:id="@+id/text_server_port"
+                android:layout_below="@+id/label_server_port"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_column="3"
+                android:layout_gravity="left" />
+        </TableRow>
+
+    </TableLayout>
 </RelativeLayout>
