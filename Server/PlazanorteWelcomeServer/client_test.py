@@ -1,5 +1,8 @@
+import json
 from socket import socket, AF_INET, SOCK_DGRAM, SOCK_STREAM
-from server import BROADCAST_PORT, SERVICE_SECRET
+from server import BROADCAST_PORT
+
+SERVICE_SECRET = "laminatenicida"
 
 def getServerIp():
     s = socket(AF_INET, SOCK_DGRAM)
@@ -21,8 +24,16 @@ def sendRequest(addr, request):
     s2 = socket(AF_INET, SOCK_STREAM)
     s2.connect(addr)
     s2.send(request)
+    response = s2.recv(1024)
+    print response
     s2.close()
 
+def generateCorrectRequest():
+    req = {"username": "mexomagno",
+           "secret" : SERVICE_SECRET,
+           "command": None,
+           "args": None}
+    return json.dumps(req)
 
 if __name__ == "__main__":
     print "Searching service..."
@@ -32,5 +43,5 @@ if __name__ == "__main__":
         exit()
     print "Found at {}:{}".format(SERVER_ADDR[0], SERVER_ADDR[1])
     print "Sending a little message..."
-    sendRequest(SERVER_ADDR, "Wena servidor conchetumare!")
+    sendRequest(SERVER_ADDR, generateCorrectRequest())
     print "Done."

@@ -7,6 +7,7 @@ import signal
 from sys import exit
 import os
 from colorama import init, Fore, Back, Style
+from random import choice, random
 
 # General settings
 BUFFER_SIZE = 1024
@@ -34,16 +35,14 @@ USER_DATA_DIRECTORY = "user_data"
 def parseArguments():
     import argparse as AP
     parser = AP.ArgumentParser(prog = os.path.basename(__file__),description = "WelcomeHome greeting server", epilog = "V{}".format(VERSION))
-    parser.add_argument("-p", "--port", nargs = 1, type = int, default = DEFAULT_SERVICE_PORT, metavar ="PORT",
+    parser.add_argument("-p", "--port", nargs = 1, type = int, default = [DEFAULT_SERVICE_PORT], metavar ="PORT",
                         help = "Specify port where requests will be listened to")
     parser.add_argument("-s", "--secret", nargs = 1, metavar = "SECRET",
                         help = "Specify secret for service identification")
     args = parser.parse_args()
-    print args
-    argsdict = vars(args)
     # validate server port
     if args.port is None:
-        args.port = DEFAULT_SERVICE_PORT
+        args.port = [DEFAULT_SERVICE_PORT]
         print "Using default port {}".format(DEFAULT_SERVICE_PORT)
     if args.port[0] > 65535 or args.port[0] < 1024:
         print Fore.RED + Style.BRIGHT + "Error: Port number must be between 1024 and 65535" + Fore.RESET + Style.RESET_ALL
@@ -56,17 +55,62 @@ def parseArguments():
     return args
 
 ############################################################
-# Service logic section
+# Greetings
 ############################################################
 
+class Words:
+    ##### Words and phrases
+    honorifics = {"male": ["Mister", "Lord", "Master", "Sir"],
+                  "female": ["Mistress", "Princess", "Lady", "Master"]}
+    affection_adjectives = {"male": ["Dear", "Beloved", "My most beloved", "Graceful", "Cherished"],
+                            "female": ["Dear", "Beloved", "My most beloved", "Graceful", "Cherished"]}
+    welcoming_phrases = ["Welcome", "Welcome home", "welcome back", "i've missed you"]
+    friendly_questions = ["where have you been today", "how are you doing", "How's your day going", "What's up",
+                          "Have you been up to anything good today", "have you been good", "are you doing okay",
+                          "Would you like a cup of coffee? Well, go and make it yourself", "whassuuuup", "whadup",
+                          "whatcha doing"]
+    ##### Probabilities
+    honorific_p = 0.4
+    affection_adjective_p = 0.7
+    welcoming_phrase_p = 1
+    friendly_question_p = 0.9
+    @staticmethod
+    def getRandomGreeting(gender, friendly_name):
+        welcoming_phrase = choice(Words.welcoming_phrases) + " " if random() < Words.welcoming_phrase_p else ""
+        affection_adjective = choice(Words.affection_adjectives[gender]) + " " if random() < Words.affection_adjective_p else ""
+        honorific = choice(Words.honorifics[gender]) + " " if random() < Words.honorific_p else ""
+        friendly_question = choice(Words.friendly_questions) + "?" if random() < Words.friendly_question_p else ""
+        return "{WELCOMING_PHRASE}, {AFFECTION_ADJECTIVE}{HONORIFIC}{NAME}. {FRIENDLY_QUESTION}".format(
+            WELCOMING_PHRASE = welcoming_phrase,
+            AFFECTION_ADJECTIVE = affection_adjective,
+            HONORIFIC = honorific,
+            NAME = friendly_name,
+            FRIENDLY_QUESTION = friendly_question)
 
+
+
+def getFriendlyName(user_data_dict):
+    names = [user_data_dict["real_name"], user_data_dict["real_lastname"]]
+    names += user_data_dict["aliases"]
+    return choice(names)
+
+def greet(user_data_dict):
+    # Create nice message
+    message = Words.getRandomGreeting(gender = user_data_dict["gender"], friendly_name = getFriendlyName(user_data_dict))
+    forecast = "Tomorrow will be cloudy. Please wear a jacket!"
+    print message
+
+
+############################################################
+# Service logic section
+############################################################
 
 def getOwnIpAddress():
     s = socket(AF_INET, SOCK_DGRAM)
     s.connect(('8.8.8.8', 1))  # connecting to a UDP address doesn't send packets
     return s.getsockname()[0]
 
-MY_IP = getOwnIpAddress() #None # gethostbyname(gethostname())
+MY_IP = getOwnIpAddress()
 
 # Error codes
 E_SUCCESS = 0
@@ -75,6 +119,7 @@ E_MALFORMED_DATA = 2
 E_INSUFFICIENT_DATA = 3
 E_NO_DATA = 4
 E_UNKNOWN_USER = 5
+E_WRONG_SECRET = 6
 
 def serviceInfoBroadcast():
     # Settings
@@ -134,15 +179,17 @@ def serve(conn):
     for key in REQUIRED_KEYS:
         if key not in data_dict.keys():
             return E_INSUFFICIENT_DATA
+    # Check if secret is correct
+    if data_dict["secret"] != SERVICE_SECRET:
+        return E_WRONG_SECRET
     # Search user info
     user_data = USER_DATA_DIRECTORY + "/" + data_dict["username"] + ".json"
     if not os.path.exists(user_data):
         return E_UNKNOWN_USER
     with open(user_data) as user_data_file:
         loaded_user_data = json.loads(user_data_file.read().replace("\n", ""))
-    # Generate welcome message
-    message = "Welcome home, {}!".format(loaded_user_data["real_name"].split()[0])
-    print message
+    # Greet
+    greet(loaded_user_data)
     return E_SUCCESS
 
 def endProgram(signum, frame):
@@ -154,9 +201,8 @@ def endProgram(signum, frame):
     print "Done. Chao conchetumare."
     exit(0)
 
-
-if __name__ == "__main__":
-    # Parse arguments
+def main():
+    # Parse arguments, initialize stuff
     args = parseArguments()
     SERVICE_PORT = args.port
     SERVICE_SECRET = args.secret
@@ -171,3 +217,19 @@ if __name__ == "__main__":
     # Start requests server
     requestsserver_thread = Thread(group=None, target=requestsServer)
     requestsserver_thread.start()
+
+######################################
+# Testing
+######################################
+def greetTesting():
+    # Load setting
+    with open(USER_DATA_DIRECTORY + "/mexomagno.json") as user_data_file:
+        loaded_user_data = json.loads(user_data_file.read().replace("\n", ""))
+    # Greet
+    for i in range(100):
+        greet(loaded_user_data)
+
+if __name__ == "__main__":
+    # main()
+    greetTesting()
+

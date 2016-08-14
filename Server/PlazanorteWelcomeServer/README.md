@@ -34,8 +34,8 @@ Only then we proceed to parse the input and do our logic.
 
 Components
 ----------
-The actual code isn't as structured as it's shown here, but the server
-is made up from the following parts:
+The actual code isn't as structured as it's shown here, nonetheless the 
+server is made up of the following parts:
 
 - **UDP Broadcast thread**: Constantly broadcasts to the network the
 needed info to use the service

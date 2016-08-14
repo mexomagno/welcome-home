@@ -1,5 +1,10 @@
 {
   "username" : "mexomagno",
-  "real_name" : "Maximiliano Castro",
-  "aliases" : ["Max", "Mexo", "Maxo"]
+  "gender" : "male",
+  "real_name" : "Maximiliano",
+  "real_lastname": "Castro",
+  "aliases" : ["Max", "Mexo", "Maxo"],
+  "last_greet": "123455667",
+  "wants_music" : "True",
+  "music_probability": "1"
 }
