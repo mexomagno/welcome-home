@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from socket import socket, AF_INET, SOCK_DGRAM, SOL_SOCKET, SO_BROADCAST, SOCK_STREAM, gethostbyname, gethostname
-from time import sleep
+from time import sleep, mktime
 from threading import Thread
 import json
 import signal
@@ -8,12 +8,14 @@ from sys import exit
 import os
 from colorama import init, Fore, Back, Style
 from random import choice, random
+from datetime import datetime
 
 # General settings
 BUFFER_SIZE = 1024
 VERSION="1.0"
 SERVICE_PORT = None
 SERVICE_SECRET = ""
+GREETING_TIME_PERIOD = 1#2*(60*60) # 2 hours
 
 # Service broadcast settings
 BROADCAST_PORT = 50000
@@ -87,18 +89,38 @@ class Words:
             NAME = friendly_name,
             FRIENDLY_QUESTION = friendly_question)
 
-
+def updateUserData(user_data_dict):
+    with open(USER_DATA_DIRECTORY + "/" + user_data_dict["username"] + ".json", "w") as user_data_file:
+        user_data_file.write(json.dumps(user_data_dict, indent = 4, sort_keys = True))
 
 def getFriendlyName(user_data_dict):
     names = [user_data_dict["real_name"], user_data_dict["real_lastname"]]
     names += user_data_dict["aliases"]
     return choice(names)
 
+def getCurrentUTCTimestamp():
+    return mktime(datetime.now().timetuple())
+
 def greet(user_data_dict):
+    # Check if user must be greeted
+    current_time = getCurrentUTCTimestamp()
+    last_greet_time = long(user_data_dict["last_greet"])
+    time_difference = current_time - last_greet_time
+    if time_difference < GREETING_TIME_PERIOD:
+        m, s = divmod(time_difference, 60)
+        h, m = divmod(m, 60)
+        human_readable = "%d:%02d:%02d" % (h, m, s)
+        print "Recently greeted ({} ago)".format(human_readable)
+        return E_USER_GREETED_RECENTLY
+    user_data_dict["last_greet"] = getCurrentUTCTimestamp()
+    updateUserData(user_data_dict)
     # Create nice message
     message = Words.getRandomGreeting(gender = user_data_dict["gender"], friendly_name = getFriendlyName(user_data_dict))
     forecast = "Tomorrow will be cloudy. Please wear a jacket!"
+    if bool(user_data_dict["wants_music"]) and random() < int(user_data_dict["music_probability"]):
+        print "User wants music!"
     print message
+    return E_SUCCESS
 
 
 ############################################################
@@ -120,6 +142,7 @@ E_INSUFFICIENT_DATA = 3
 E_NO_DATA = 4
 E_UNKNOWN_USER = 5
 E_WRONG_SECRET = 6
+E_USER_GREETED_RECENTLY = 7
 
 def serviceInfoBroadcast():
     # Settings
@@ -189,8 +212,8 @@ def serve(conn):
     with open(user_data) as user_data_file:
         loaded_user_data = json.loads(user_data_file.read().replace("\n", ""))
     # Greet
-    greet(loaded_user_data)
-    return E_SUCCESS
+    result = greet(loaded_user_data)
+    return result
 
 def endProgram(signum, frame):
     global servicebroadcast_thread, requestsserver_thread
@@ -202,6 +225,7 @@ def endProgram(signum, frame):
     exit(0)
 
 def main():
+    global servicebroadcast_thread, requestsserver_thread, RUN, SERVICE_PORT, SERVICE_SECRET
     # Parse arguments, initialize stuff
     args = parseArguments()
     SERVICE_PORT = args.port
