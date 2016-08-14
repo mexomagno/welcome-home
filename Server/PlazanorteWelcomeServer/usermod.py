@@ -27,24 +27,36 @@ REQUIRED_USER_FIELDS = {"username": {"prompt": "Enter a unique user nickname"},
                                               "valid_values": " ".join(str(e) for e in range(0,100+1)).split()}
                         }
 FIELD_PROMPT_ORDER = ["username", "real_name", "real_lastname", "aliases", "gender", "music_probability"]
+
+
+# Colors
+PROMPT_COLOR = Fore.LIGHTCYAN_EX
+USER_COLOR = Fore.WHITE
+ERROR_COLOR = Fore.LIGHTRED_EX
+NO_COLOR = Fore.RESET
+WARNING_COLOR = Fore.YELLOW
+
 def onlyOneIsSet(*args):
     return sum(args) == 1
 
-def listUsers():
+def getUsersList():
     files = os.listdir(USER_DATA_DIRECTORY)
-    users = ""
+    users = []
     for file in files:
         if file.lower().endswith(".{}".format(USER_DATA_FILE_TYPE)):
-            users += "\t" + (file.lower())[0:(len(file) - len(USER_DATA_FILE_TYPE) - 1)] + "\n"
+            users.append((file.lower())[0:(len(file) - len(USER_DATA_FILE_TYPE) - 1)])
+    return users
+
+def listUsers():
     print "\nRegistered usernames:"
-    print users
+    for user in getUsersList():
+        print "\t{}\n".format(user)
+
+def userExists(user):
+    return user.lower() in getUsersList()
 
 def addUser():
     user_data = {}
-    PROMPT_COLOR = Fore.LIGHTCYAN_EX
-    USER_COLOR = Fore.WHITE
-    ERROR_COLOR = Fore.LIGHTRED_EX
-    NO_COLOR = Fore.RESET
     for key in FIELD_PROMPT_ORDER:
         current_field = REQUIRED_USER_FIELDS[key]
         prompt = current_field["prompt"]
@@ -55,8 +67,12 @@ def addUser():
                                                                                USER_COLOR = USER_COLOR)
         user_input = raw_input(prompt)
         while ("valid_values" in current_field.keys() and user_input.strip().lower() not in current_field["valid_values"]) \
-                or (user_input == "" and "default_value" not in current_field.keys()):
-            print ERROR_COLOR + "Error: Your input is invalid. Please retry"
+                or (user_input == "" and "default_value" not in current_field.keys())\
+                or (key == "username" and userExists(user_input)):
+            if (key == "username" and userExists(user_input)):
+                print ERROR_COLOR + "Error: User already exists. Please retry"
+            else:
+                print ERROR_COLOR + "Error: Your input is invalid. Please retry"
             user_input = raw_input(prompt)
         if user_input == "":
             user_input = current_field["default_value"]
@@ -65,11 +81,30 @@ def addUser():
         # Specific cases
         if key == "aliases":
             user_data[key] = user_data[key].split(",")
+            user_data[key] = map(str.strip, user_data[key])
 
         print "You chose: '{}'".format(user_data[key]) + NO_COLOR
 
     print user_data
 
+def deleteUser():
+    prompt = PROMPT_COLOR + "Enter user to delete : "+ USER_COLOR
+    user_input = raw_input(prompt)
+    while not userExists(user_input.strip().lower()):
+        print ERROR_COLOR + "Error: User doesn't exists. Please retry"
+        user_input = raw_input(prompt)
+    prompt = WARNING_COLOR + "WARNING: ARE YOU SURE YOU WANT TO DELETE USER '{}'? (yes/no) : ".format(USER_COLOR + user_input.strip().lower() + PROMPT_COLOR) + USER_COLOR
+    user_input = raw_input(prompt)
+    while user_input.strip().lower() not in ["yes", "no"]:
+        print ERROR_COLOR + "Error: You must enter 'yes' or 'no'. Please retry"
+        user_input = raw_input(prompt)
+    if user_input == "no":
+        print PROMPT_COLOR + "Cancelled." + NO_COLOR
+        exit(0)
+    # Delete selected user
+    os.remove(USER_DATA_DIRECTORY + "/" + user_input.lower().strip() + "." + USER_DATA_FILE_TYPE)
+    print PROMPT_COLOR + "Succesfully deleted user '{}'".format(USER_COLOR + user_input.lower().strip() + PROMPT_COLOR) + NO_COLOR
+    
 def parseArguments():
     import argparse as AP
     parser = AP.ArgumentParser(prog = os.path.basename(__file__), description = MODULE_DESCRIPTION, epilog = "V{}".format(MODULE_VERSION))

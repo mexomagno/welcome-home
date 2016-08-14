@@ -29,6 +29,7 @@ DEFAULT_SERVICE_SECRET = "laminatenicida"
 
 # User management settings
 USER_DATA_DIRECTORY = "user_data"
+USER_DATA_FILE_TYPE = "json"
 
 ############################################################
 # Usage and argument parsing section
