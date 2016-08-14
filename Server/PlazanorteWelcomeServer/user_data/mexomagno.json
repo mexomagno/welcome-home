@@ -4,11 +4,11 @@
         "Mexo", 
         "Maxo"
     ], 
-    "gender": "male", 
-    "last_greet": 1471198202.0, 
-    "music_probability": "1", 
+    "gender": "female", 
+    "last_greet": 1471208198.0, 
+    "music_probability": "100", 
     "real_lastname": "Castro", 
     "real_name": "Maximiliano", 
-    "username": "mexomagno", 
-    "wants_music": "True"
+    "username": "Mexomagno", 
+    "wants_music": "true"
 }

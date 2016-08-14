@@ -102,8 +102,7 @@ def getFriendlyName(user_data_dict):
 def getCurrentUTCTimestamp():
     return mktime(datetime.now().timetuple())
 
-def greet(user_data_dict):
-    # Check if user must be greeted
+def userWasGreetedRecently(user_data_dict):
     current_time = getCurrentUTCTimestamp()
     last_greet_time = long(user_data_dict["last_greet"])
     time_difference = current_time - last_greet_time
@@ -111,8 +110,14 @@ def greet(user_data_dict):
         m, s = divmod(time_difference, 60)
         h, m = divmod(m, 60)
         human_readable = "%d:%02d:%02d" % (h, m, s)
-        print "Recently greeted ({} ago)".format(human_readable)
-        return E_USER_GREETED_RECENTLY
+        print "Error: Recently greeted ({} ago)".format(human_readable)
+        return True
+    return False
+
+def greet(user_data_dict):
+    # Check if user must be greeted
+    #if userWasGreetedRecently(user_data_dict):
+    #    return E_USER_GREETED_RECENTLY
     user_data_dict["last_greet"] = getCurrentUTCTimestamp()
     updateUserData(user_data_dict)
     # Create nice message
@@ -248,7 +253,7 @@ def main():
 ######################################
 def greetTesting():
     # Load setting
-    with open(USER_DATA_DIRECTORY + "/mexomagno.json") as user_data_file:
+    with open(USER_DATA_DIRECTORY + "/Diana.json") as user_data_file:
         loaded_user_data = json.loads(user_data_file.read().replace("\n", ""))
     # Greet
     for i in range(100):

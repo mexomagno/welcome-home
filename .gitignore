@@ -87,4 +87,7 @@ crashlytics-build.properties
 fabric.properties
 
 # Python compiled
-*.pyc
+./*.pyc
+
+# User data
+Server/PlazanorteWelcomeServer/user_data/*.json
