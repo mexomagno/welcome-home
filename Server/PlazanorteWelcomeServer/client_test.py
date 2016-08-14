@@ -10,20 +10,27 @@ def getServerIp():
         # Check if it's what we want
         ip = ""
         if data.startswith(SECRET):
-            ip = data[len(SECRET):]
-        return ip
+            SERVICE_PORT = int(data[(len(SECRET)+1) :])
+            addr = (addr[0], SERVICE_PORT)
+            return addr
+        else:
+            return None
 
-def sendRequest(ip, request):
+
+def sendRequest(addr, request):
     s2 = socket(AF_INET, SOCK_STREAM)
-    s2.connect((ip, SERVER_PORT))
+    s2.connect(addr)
     s2.send(request)
     s2.close()
 
 
 if __name__ == "__main__":
     print "Searching service..."
-    SERVER_IP = getServerIp()
-    print "Found at " + SERVER_IP
+    SERVER_ADDR = getServerIp()
+    if SERVER_ADDR == None:
+        print "not our service!"
+        exit()
+    print "Found at {}:{}".format(SERVER_ADDR[0], SERVER_ADDR[1])
     print "Sending a little message..."
-    sendRequest(SERVER_IP, "Wena servidor conchetumare!")
+    sendRequest(SERVER_ADDR, "Wena servidor conchetumare!")
     print "Done."
