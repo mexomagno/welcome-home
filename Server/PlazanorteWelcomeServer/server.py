@@ -5,12 +5,12 @@ from threading import Thread
 import json
 import signal
 from sys import exit
+import os
 
 # General settings
 BUFFER_SIZE = 1024
 
 # Service broadcast settings
-#servicebroadcast_thread;
 BROADCAST_PORT = 50000
 BROADCAST_IP = "192.168.0.255"
 SECRET = "laminatenicida"
@@ -19,6 +19,9 @@ SLEEP_PERIOD = 5
 # Server settings
 #requestsserver_thread;
 SERVER_PORT = 8005
+
+# User management settings
+USER_DATA_DIRECTORY = "user_data"
 
 def getOwnIpAddress():
     s = socket(AF_INET, SOCK_DGRAM)
@@ -33,6 +36,7 @@ E_UNKNOWN = 1
 E_MALFORMED_DATA = 2
 E_INSUFFICIENT_DATA = 3
 E_NO_DATA = 4
+E_UNKNOWN_USER = 5
 
 def serviceInfoBroadcast():
     # Settings
@@ -83,7 +87,7 @@ def serve(conn):
         print "Errors reading data"
         return E_NO_DATA
     # Check data
-    print "Data received: " + data
+    # print "Data received: " + data
     try:
         data_dict = json.loads(data, "utf-8")
     except ValueError:
@@ -92,6 +96,15 @@ def serve(conn):
     for key in REQUIRED_KEYS:
         if key not in data_dict.keys():
             return E_INSUFFICIENT_DATA
+    # Search user info
+    user_data = USER_DATA_DIRECTORY + "/" + data_dict["username"] + ".json"
+    if not os.path.exists(user_data):
+        return E_UNKNOWN_USER
+    with open(user_data) as user_data_file:
+        loaded_user_data = json.loads(user_data_file.read().replace("\n", ""))
+    # Generate welcome message
+    message = "Welcome home, {}!".format(loaded_user_data["real_name"].split()[0])
+    print message
     return E_SUCCESS
 
 def endProgram(signum, frame):
