@@ -6,22 +6,60 @@ import json
 import signal
 from sys import exit
 import os
+from colorama import init, Fore, Back, Style
 
 # General settings
 BUFFER_SIZE = 1024
+VERSION="1.0"
+SERVICE_PORT = None
+SERVICE_SECRET = ""
 
 # Service broadcast settings
 BROADCAST_PORT = 50000
 BROADCAST_IP = "192.168.0.255"
-SECRET = "laminatenicida"
 SLEEP_PERIOD = 5
 
 # Server settings
 #requestsserver_thread;
-SERVER_PORT = 8005
+DEFAULT_SERVICE_PORT = 8004
+DEFAULT_SERVICE_SECRET = "laminatenicida"
 
 # User management settings
 USER_DATA_DIRECTORY = "user_data"
+
+############################################################
+# Usage and argument parsing section
+############################################################
+
+def parseArguments():
+    import argparse as AP
+    parser = AP.ArgumentParser(prog = os.path.basename(__file__),description = "WelcomeHome greeting server", epilog = "V{}".format(VERSION))
+    parser.add_argument("-p", "--port", nargs = 1, type = int, default = DEFAULT_SERVICE_PORT, metavar ="PORT",
+                        help = "Specify port where requests will be listened to")
+    parser.add_argument("-s", "--secret", nargs = 1, metavar = "SECRET",
+                        help = "Specify secret for service identification")
+    args = parser.parse_args()
+    print args
+    argsdict = vars(args)
+    # validate server port
+    if args.port is None:
+        args.port = DEFAULT_SERVICE_PORT
+        print "Using default port {}".format(DEFAULT_SERVICE_PORT)
+    if args.port[0] > 65535 or args.port[0] < 1024:
+        print Fore.RED + Style.BRIGHT + "Error: Port number must be between 1024 and 65535" + Fore.RESET + Style.RESET_ALL
+        exit(1)
+    args.port = args.port[0]
+    # validate secret
+    if args.secret is None:
+        print "Using default secret"
+        args.secret = DEFAULT_SERVICE_SECRET
+    return args
+
+############################################################
+# Service logic section
+############################################################
+
+
 
 def getOwnIpAddress():
     s = socket(AF_INET, SOCK_DGRAM)
@@ -47,7 +85,7 @@ def serviceInfoBroadcast():
 
     # Broadcast our info, waiting for a client
     while RUN:
-        data = "{}:{}".format(SECRET, SERVER_PORT)
+        data = "{}:{}".format(SERVICE_SECRET, SERVICE_PORT)
         s.sendto(data, ("192.168.0.255", BROADCAST_PORT))
         print "Sent broadcast with our service info"
         sleep(SLEEP_PERIOD)
@@ -55,9 +93,9 @@ def serviceInfoBroadcast():
 
 def requestsServer():
     # Create socket
-    print "Creating requests server on port {}".format(SERVER_PORT)
+    print "Creating requests server on port {}".format(SERVICE_PORT)
     s = socket(AF_INET, SOCK_STREAM)
-    s.bind((MY_IP, SERVER_PORT))
+    s.bind((MY_IP, SERVICE_PORT))
     s.listen(1)
     # wait for requests
     while RUN:
@@ -118,6 +156,11 @@ def endProgram(signum, frame):
 
 
 if __name__ == "__main__":
+    # Parse arguments
+    args = parseArguments()
+    SERVICE_PORT = args.port
+    SERVICE_SECRET = args.secret
+
     global servicebroadcast_thread, requestsserver_thread
     RUN = True
     # Start signal handler

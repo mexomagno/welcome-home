@@ -1,5 +1,5 @@
 from socket import socket, AF_INET, SOCK_DGRAM, SOCK_STREAM
-from server import BROADCAST_PORT, SECRET, SERVER_PORT
+from server import BROADCAST_PORT, SERVICE_SECRET
 
 def getServerIp():
     s = socket(AF_INET, SOCK_DGRAM)
@@ -9,8 +9,8 @@ def getServerIp():
         data, addr = s.recvfrom(1024)
         # Check if it's what we want
         ip = ""
-        if data.startswith(SECRET):
-            SERVICE_PORT = int(data[(len(SECRET)+1) :])
+        if data.startswith(SERVICE_SECRET):
+            SERVICE_PORT = int(data[(len(SERVICE_SECRET)+1) :])
             addr = (addr[0], SERVICE_PORT)
             return addr
         else:
